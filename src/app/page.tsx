@@ -152,7 +152,7 @@ export default function HomePage() {
         <li>Draw your lawn using the green polygon tool (top-right).</li>
         <li>Optionally draw the house/exclusions using the red polygon tool.</li>
         <li>Click the first point to finish each shape. You can edit or delete them.</li>
-        <li>Click Estimate Area to calculate square footage (exclusions are subtracted).</li>
+        <li>Click Estimate Area to calculate square footage and time estimate (exclusions are subtracted).</li>
       </ol>
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16, color: '#333' }}>
         <div style={{ width: 14, height: 14, background: '#2a7', border: '1px solid #1e5', borderRadius: 2 }}></div>
@@ -199,7 +199,18 @@ export default function HomePage() {
           )}
           {loading ? 'Estimating…' : 'Estimate Area'}
         </button>
-        <div style={{ alignSelf: 'center' }}>{squareFeet ? `${squareFeet.toLocaleString()} sq ft` : ''}</div>
+        <div style={{ alignSelf: 'center' }}>
+          {squareFeet ? (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>
+                {squareFeet.toLocaleString()} sq ft
+              </div>
+              <div style={{ fontSize: 14, color: '#666' }}>
+                Est. time: {Math.ceil(squareFeet / 250)} minutes
+              </div>
+            </div>
+          ) : ''}
+        </div>
         <div style={{ gridColumn: '1 / -1' }}></div>
       </form>
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
