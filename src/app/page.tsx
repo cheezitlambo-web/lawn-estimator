@@ -136,8 +136,8 @@ export default function HomePage() {
       const sqft = areaSqMeters * 10.7639
       
       // Alternative calculation for validation
-      const bbox = turf.bbox(result || polygon)
-      const bboxArea = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1]) * 111000 * 111000 // rough conversion to sq meters
+      const polygonBbox = turf.bbox(result || polygon)
+      const bboxArea = (polygonBbox[2] - polygonBbox[0]) * (polygonBbox[3] - polygonBbox[1]) * 111000 * 111000 // rough conversion to sq meters
       
       // Debug logging
       console.log('Area calculation debug:')
@@ -145,7 +145,7 @@ export default function HomePage() {
       console.log('- Bbox area (rough):', bboxArea)
       console.log('- Conversion factor:', 10.7639)
       console.log('- Area in sq ft:', sqft)
-      console.log('- Bbox:', bbox)
+      console.log('- Bbox:', polygonBbox)
       console.log('- Polygon coordinates sample:', JSON.stringify((result || polygon)?.geometry?.coordinates?.[0]?.slice(0, 3)))
       
       setSquareFeet(Math.round(sqft))
