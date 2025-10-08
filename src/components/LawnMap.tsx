@@ -57,7 +57,7 @@ export default function LawnMap({ center, onPolygonChange, onExclusionChange }: 
       />
       <FeatureGroup ref={featureGroupRef} pathOptions={{ color: '#2a7' }}>
         <EditControl
-          position="topright"
+          position="topleft"
           draw={{
             rectangle: false,
             circle: false,
