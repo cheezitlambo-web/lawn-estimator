@@ -16,7 +16,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false)
   const [locating, setLocating] = useState(false)
   const [address, setAddress] = useState('')
-  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null)
+  const [autocomplete, setAutocomplete] = useState<any>(null)
 
   // Removed unused onPolygonChange callback
 
