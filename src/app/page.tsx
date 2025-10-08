@@ -16,6 +16,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false)
   const [locating, setLocating] = useState(false)
   const [address, setAddress] = useState('')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [autocomplete, setAutocomplete] = useState<any>(null)
 
   // Removed unused onPolygonChange callback
