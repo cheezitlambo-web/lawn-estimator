@@ -131,12 +131,12 @@ export default function HomePage() {
         } catch {}
       }
       
-      // Calculate final area using turf.area() which returns square meters
-      const areaSqMeters = turf.area(result || polygon)
+      // Calculate area of the ORIGINAL lawn polygon (green), not the result after subtractions
+      const lawnAreaSqMeters = turf.area(polygon)
       
       // Apply correction factor based on the test square (10,000 / 7671.98 = 1.303)
       const correctionFactor = 10000 / 7671.976579524735
-      const correctedAreaSqMeters = areaSqMeters * correctionFactor
+      const correctedAreaSqMeters = lawnAreaSqMeters * correctionFactor
       const sqft = correctedAreaSqMeters * 10.7639
       
       // Test: Create a simple 100m x 100m square for comparison
@@ -158,7 +158,7 @@ export default function HomePage() {
       
       // Debug logging
       console.log('Area calculation debug:')
-      console.log('- Area in sq meters (turf):', areaSqMeters)
+      console.log('- Lawn area in sq meters (turf):', lawnAreaSqMeters)
       console.log('- Correction factor:', correctionFactor)
       console.log('- Corrected area in sq meters:', correctedAreaSqMeters)
       console.log('- Conversion factor:', 10.7639)
@@ -167,7 +167,8 @@ export default function HomePage() {
       console.log('- Meters per degree lat:', metersPerDegreeLat)
       console.log('- Meters per degree lng:', metersPerDegreeLng)
       console.log('- Bbox:', polygonBbox)
-      console.log('- Polygon coordinates sample:', JSON.stringify((result || polygon)?.geometry?.coordinates?.[0]?.slice(0, 3)))
+      console.log('- Lawn polygon coordinates sample:', JSON.stringify(polygon?.geometry?.coordinates?.[0]?.slice(0, 3)))
+      console.log('- Exclusion polygon coordinates sample:', JSON.stringify(exclusion?.geometry?.coordinates?.[0]?.slice(0, 3)))
       
       setSquareFeet(Math.round(sqft))
       console.log(`Final lawn area: ${Math.round(sqft).toLocaleString()} sq ft`)
