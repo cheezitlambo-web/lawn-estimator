@@ -89,7 +89,7 @@ export default function LawnMap({ center, onPolygonChange, onExclusionChange }: 
       {/* Exclusion group (e.g., house) in red */}
       <FeatureGroup ref={exclusionGroupRef} pathOptions={{ color: '#d33' }}>
         <EditControl
-          position="topright"
+          position="bottomright"
           draw={{
             rectangle: false,
             circle: false,
