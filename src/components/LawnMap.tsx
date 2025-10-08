@@ -13,13 +13,13 @@ import 'leaflet-draw/dist/leaflet.draw.css'
 
 export type LawnMapProps = {
   center: [number, number]
-  onPolygonChange: (polygon: turf.helpers.Feature<turf.helpers.Polygon> | null) => void
-  onExclusionChange?: (polygon: turf.helpers.Feature<turf.helpers.Polygon> | null) => void
+  onPolygonChange: (polygon: GeoJSON.Feature<GeoJSON.Polygon> | null) => void
+  onExclusionChange?: (polygon: GeoJSON.Feature<GeoJSON.Polygon> | null) => void
 }
 
 export default function LawnMap({ center, onPolygonChange, onExclusionChange }: LawnMapProps) {
-  const [polygon, setPolygon] = useState<turf.helpers.Feature<turf.helpers.Polygon> | null>(null)
-  const [exclusion, setExclusion] = useState<turf.helpers.Feature<turf.helpers.Polygon> | null>(null)
+  const [polygon, setPolygon] = useState<GeoJSON.Feature<GeoJSON.Polygon> | null>(null)
+  const [exclusion, setExclusion] = useState<GeoJSON.Feature<GeoJSON.Polygon> | null>(null)
   const featureGroupRef = useRef<L.FeatureGroup>(null)
   const exclusionGroupRef = useRef<L.FeatureGroup>(null)
   const mapRef = useRef<L.Map>(null)

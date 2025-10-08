@@ -10,9 +10,9 @@ const LawnMap = dynamic(() => import('../components/LawnMap'), { ssr: false })
 
 export default function HomePage() {
   const [center, setCenter] = useState<[number, number]>([40.0, -89.0])
-  const [polygon, setPolygon] = useState<turf.helpers.Feature<turf.helpers.Polygon> | null>(null)
+  const [polygon, setPolygon] = useState<GeoJSON.Feature<GeoJSON.Polygon> | null>(null)
   const [squareFeet, setSquareFeet] = useState<number | null>(null)
-  const [exclusion, setExclusion] = useState<turf.helpers.Feature<turf.helpers.Polygon> | null>(null)
+  const [exclusion, setExclusion] = useState<GeoJSON.Feature<GeoJSON.Polygon> | null>(null)
   const [loading, setLoading] = useState(false)
   const [locating, setLocating] = useState(false)
   const [address, setAddress] = useState('')
@@ -100,7 +100,7 @@ export default function HomePage() {
       
       // Convert OSM to GeoJSON and filter buildings
       const gj = osmtogeojson(osm)
-      const buildings: turf.helpers.Feature<turf.helpers.Polygon | turf.helpers.MultiPolygon>[] = []
+      const buildings: GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon>[] = []
       for (const f of gj.features) {
         if (f.properties && f.properties.building) {
           if (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon') {
@@ -111,7 +111,7 @@ export default function HomePage() {
       console.log(`Found ${buildings.length} buildings to exclude`)
       
       // Start with the lawn polygon
-      let result: turf.helpers.Feature<turf.helpers.Polygon> | null = polygon
+      let result: GeoJSON.Feature<GeoJSON.Polygon> | null = polygon
       
       // Subtract user-drawn exclusions first (house, patios, etc.)
       if (exclusion) {
