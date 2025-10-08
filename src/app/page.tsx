@@ -18,9 +18,7 @@ export default function HomePage() {
   const [address, setAddress] = useState('')
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null)
 
-  const onPolygonChange = useCallback((poly: turf.helpers.Feature<turf.helpers.Polygon> | null) => {
-    setPolygon(poly)
-  }, [])
+  // Removed unused onPolygonChange callback
 
   // Initialize Google Places autocomplete
   useEffect(() => {
@@ -54,7 +52,7 @@ export default function HomePage() {
     // Start trying to initialize after a short delay
     const timer = setTimeout(initAutocomplete, 500)
     return () => clearTimeout(timer)
-  }, [])
+  }, [autocomplete])
 
   const geocode = async (address: string) => {
     if (!address || address.trim().length < 3) return
@@ -91,7 +89,7 @@ export default function HomePage() {
       // Fetch buildings from OpenStreetMap
       console.log('Fetching buildings from OpenStreetMap...')
       const overpass = await fetch(`/api/buildings?bbox=${south},${west},${north},${east}`)
-      let osm: { elements: any[] } | null = null
+      let osm: { elements: unknown[] } | null = null
       try {
         osm = await overpass.json()
       } catch {}
