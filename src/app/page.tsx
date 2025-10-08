@@ -89,13 +89,35 @@ export default function HomePage() {
       const correctedAreaSqMeters = areaSqMeters * correctionFactor
       const sqft = correctedAreaSqMeters * 10.7639
       setPropertyArea(Math.round(sqft))
+      
+      // Clear the map for exclusions step
+      setPolygon(null)
+      setExclusion(null)
+      setSquareFeet(null)
+      
       setCurrentStep(3) // Move to exclusions step
     }
   }
 
   const handleExclusionsComplete = () => {
+    if (exclusion && propertyArea) {
+      // Calculate exclusion area
+      const exclusionAreaSqMeters = turf.area(exclusion)
+      const correctionFactor = 10000 / 7671.976579524735
+      const correctedExclusionAreaSqMeters = exclusionAreaSqMeters * correctionFactor
+      const exclusionSqft = correctedExclusionAreaSqMeters * 10.7639
+      
+      // Calculate final lawn area: property - exclusions
+      const finalLawnArea = Math.max(0, propertyArea - Math.round(exclusionSqft))
+      setSquareFeet(finalLawnArea)
+      
+      console.log('Final calculation:')
+      console.log('- Property area:', propertyArea, 'sq ft')
+      console.log('- Exclusion area:', Math.round(exclusionSqft), 'sq ft')
+      console.log('- Final lawn area:', finalLawnArea, 'sq ft')
+    }
+    
     setCurrentStep(4) // Move to results step
-    estimate() // Calculate final area
   }
 
   const estimate = useCallback(async () => {
@@ -254,6 +276,7 @@ export default function HomePage() {
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <h2 style={{ fontSize: 24, marginBottom: 16 }}>Step 3: Draw Non-Mowable Areas</h2>
           <p style={{ marginBottom: 16, color: '#666' }}>Draw polygons around areas you don't mow (house, patios, driveways, etc.)</p>
+          <p style={{ marginBottom: 16, color: '#888', fontSize: 14 }}>Property area saved: {propertyArea?.toLocaleString()} sq ft</p>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 16, color: '#333' }}>
             <div style={{ width: 14, height: 14, background: '#d33', border: '1px solid #b11', borderRadius: 2 }}></div>
             <span style={{ fontSize: 14 }}>Red = Non-mowable areas</span>
