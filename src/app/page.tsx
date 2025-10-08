@@ -115,6 +115,24 @@ export default function HomePage() {
       console.log('- Property area:', propertyArea, 'sq ft')
       console.log('- Exclusion area:', Math.round(exclusionSqft), 'sq ft')
       console.log('- Final lawn area:', finalLawnArea, 'sq ft')
+      
+      // Test scale verification
+      console.log('=== SCALE TEST ===')
+      console.log('Test 100m x 100m square should be 10,000 sq meters = 107,639 sq ft')
+      const testSquare = turf.polygon([[
+        [-88.5216, 40.1087],
+        [-88.5216, 40.1096], // +0.0009 degrees ≈ 100m
+        [-88.5207, 40.1096], // +0.0009 degrees ≈ 100m  
+        [-88.5207, 40.1087],
+        [-88.5216, 40.1087]
+      ]])
+      const testAreaSqMeters = turf.area(testSquare)
+      const testCorrectedArea = testAreaSqMeters * correctionFactor
+      const testSqft = testCorrectedArea * 10.7639
+      console.log('Test square area (turf):', testAreaSqMeters, 'sq meters')
+      console.log('Test square corrected:', testCorrectedArea, 'sq meters')
+      console.log('Test square in sq ft:', Math.round(testSqft), 'sq ft (should be ~107,639)')
+      console.log('==================')
     }
     
     setCurrentStep(4) // Move to results step
