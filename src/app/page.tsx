@@ -131,20 +131,35 @@ export default function HomePage() {
         } catch {}
       }
       
-      // Calculate final area
+      // Calculate final area using turf.area() which returns square meters
       const areaSqMeters = turf.area(result || polygon)
       const sqft = areaSqMeters * 10.7639
       
-      // Alternative calculation for validation
+      // Test: Create a simple 100m x 100m square for comparison
+      const testSquare = turf.polygon([[
+        [-89.0, 40.0],
+        [-89.0, 40.0009], // ~100m north
+        [-88.9991, 40.0009], // ~100m east  
+        [-88.9991, 40.0],
+        [-89.0, 40.0]
+      ]])
+      const testArea = turf.area(testSquare)
+      console.log('Test 100m x 100m square area:', testArea, 'sq meters (should be ~10,000)')
+      
+      // Alternative calculation using turf.area() with proper coordinate system
       const polygonBbox = turf.bbox(result || polygon)
-      const bboxArea = (polygonBbox[2] - polygonBbox[0]) * (polygonBbox[3] - polygonBbox[1]) * 111000 * 111000 // rough conversion to sq meters
+      const centerLat = (polygonBbox[1] + polygonBbox[3]) / 2
+      const metersPerDegreeLat = 111320
+      const metersPerDegreeLng = 111320 * Math.cos(centerLat * Math.PI / 180)
       
       // Debug logging
       console.log('Area calculation debug:')
       console.log('- Area in sq meters (turf):', areaSqMeters)
-      console.log('- Bbox area (rough):', bboxArea)
       console.log('- Conversion factor:', 10.7639)
       console.log('- Area in sq ft:', sqft)
+      console.log('- Center latitude:', centerLat)
+      console.log('- Meters per degree lat:', metersPerDegreeLat)
+      console.log('- Meters per degree lng:', metersPerDegreeLng)
       console.log('- Bbox:', polygonBbox)
       console.log('- Polygon coordinates sample:', JSON.stringify((result || polygon)?.geometry?.coordinates?.[0]?.slice(0, 3)))
       
