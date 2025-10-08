@@ -6,7 +6,7 @@ import * as turf from '@turf/turf'
 const MapContainer = dynamic(() => import('react-leaflet').then(m => m.MapContainer), { ssr: false })
 const TileLayer = dynamic(() => import('react-leaflet').then(m => m.TileLayer), { ssr: false })
 const FeatureGroup = dynamic(() => import('react-leaflet').then(m => m.FeatureGroup), { ssr: false })
-const EditControl = dynamic(() => import('react-leaflet-draw').then(m => (m as any).EditControl), { ssr: false }) as any
+const EditControl = dynamic(() => import('react-leaflet-draw').then(m => m.EditControl), { ssr: false })
 
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-draw/dist/leaflet.draw.css'
@@ -20,23 +20,11 @@ export type LawnMapProps = {
 export default function LawnMap({ center, onPolygonChange, onExclusionChange }: LawnMapProps) {
   const [polygon, setPolygon] = useState<turf.helpers.Feature<turf.helpers.Polygon> | null>(null)
   const [exclusion, setExclusion] = useState<turf.helpers.Feature<turf.helpers.Polygon> | null>(null)
-  const featureGroupRef = useRef<any>(null)
-  const exclusionGroupRef = useRef<any>(null)
-  const mapRef = useRef<any>(null)
+  const featureGroupRef = useRef<L.FeatureGroup>(null)
+  const exclusionGroupRef = useRef<L.FeatureGroup>(null)
+  const mapRef = useRef<L.Map>(null)
 
-  const drawOptions = useMemo(() => ({
-    draw: {
-      rectangle: false,
-      circle: false,
-      circlemarker: false,
-      marker: false,
-      polyline: false,
-      polygon: { allowIntersection: false, showArea: true }
-    },
-    edit: {
-      remove: true
-    }
-  }), [])
+  // Removed unused drawOptions
 
   useEffect(() => {
     onPolygonChange(polygon)
@@ -60,7 +48,7 @@ export default function LawnMap({ center, onPolygonChange, onExclusionChange }: 
   }, [center])
 
   return (
-    <MapContainer ref={mapRef as any} center={center} zoom={10} minZoom={3} maxZoom={22} style={{ height: 500, width: '100%', borderRadius: 8 }} scrollWheelZoom>
+    <MapContainer ref={mapRef} center={center} zoom={10} minZoom={3} maxZoom={22} style={{ height: 500, width: '100%', borderRadius: 8 }} scrollWheelZoom>
       <TileLayer 
         url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         attribution="Tiles &copy; Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
@@ -79,9 +67,9 @@ export default function LawnMap({ center, onPolygonChange, onExclusionChange }: 
             polygon: { allowIntersection: false, showArea: true, shapeOptions: { color: '#2a7', fillColor: '#bfe8cf' } }
           }}
           edit={{ remove: true }}
-          onCreated={(e: any) => {
+          onCreated={(e: L.DrawEvents.Created) => {
             const layer = e.layer
-            const latlngs = layer.getLatLngs()[0].map((ll: any) => [ll.lng, ll.lat])
+            const latlngs = layer.getLatLngs()[0].map((ll: L.LatLng) => [ll.lng, ll.lat])
             const closed = latlngs[0][0] === latlngs[latlngs.length-1][0] && latlngs[0][1] === latlngs[latlngs.length-1][1] ? latlngs : [...latlngs, latlngs[0]]
             const poly = turf.polygon([closed])
             setPolygon(poly)
@@ -90,7 +78,7 @@ export default function LawnMap({ center, onPolygonChange, onExclusionChange }: 
             const layers = featureGroupRef.current?.getLayers?.() || []
             if (layers.length === 0) { setPolygon(null); return }
             const layer = layers[0]
-            const latlngs = layer.getLatLngs()[0].map((ll: any) => [ll.lng, ll.lat])
+            const latlngs = layer.getLatLngs()[0].map((ll: L.LatLng) => [ll.lng, ll.lat])
             const closed = latlngs[0][0] === latlngs[latlngs.length-1][0] && latlngs[0][1] === latlngs[latlngs.length-1][1] ? latlngs : [...latlngs, latlngs[0]]
             const poly = turf.polygon([closed])
             setPolygon(poly)
@@ -111,9 +99,9 @@ export default function LawnMap({ center, onPolygonChange, onExclusionChange }: 
             polygon: { allowIntersection: false, showArea: true, shapeOptions: { color: '#d33', fillColor: '#f99' } }
           }}
           edit={{ remove: true }}
-          onCreated={(e: any) => {
+          onCreated={(e: L.DrawEvents.Created) => {
             const layer = e.layer
-            const latlngs = layer.getLatLngs()[0].map((ll: any) => [ll.lng, ll.lat])
+            const latlngs = layer.getLatLngs()[0].map((ll: L.LatLng) => [ll.lng, ll.lat])
             const closed = latlngs[0][0] === latlngs[latlngs.length-1][0] && latlngs[0][1] === latlngs[latlngs.length-1][1] ? latlngs : [...latlngs, latlngs[0]]
             const poly = turf.polygon([closed])
             setExclusion(poly)
@@ -122,7 +110,7 @@ export default function LawnMap({ center, onPolygonChange, onExclusionChange }: 
             const layers = exclusionGroupRef.current?.getLayers?.() || []
             if (layers.length === 0) { setExclusion(null); return }
             const layer = layers[0]
-            const latlngs = layer.getLatLngs()[0].map((ll: any) => [ll.lng, ll.lat])
+            const latlngs = layer.getLatLngs()[0].map((ll: L.LatLng) => [ll.lng, ll.lat])
             const closed = latlngs[0][0] === latlngs[latlngs.length-1][0] && latlngs[0][1] === latlngs[latlngs.length-1][1] ? latlngs : [...latlngs, latlngs[0]]
             const poly = turf.polygon([closed])
             setExclusion(poly)

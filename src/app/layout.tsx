@@ -13,7 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <script
-          src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAE-X6GtQP24JXFgdHlqAkPon6mqiTw7TM&libraries=places"
+          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
           async
           defer
         />

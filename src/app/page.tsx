@@ -16,7 +16,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false)
   const [locating, setLocating] = useState(false)
   const [address, setAddress] = useState('')
-  const [autocomplete, setAutocomplete] = useState<any>(null)
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null)
 
   const onPolygonChange = useCallback((poly: turf.helpers.Feature<turf.helpers.Polygon> | null) => {
     setPolygon(poly)
@@ -73,7 +73,7 @@ export default function HomePage() {
       } else {
         alert('Address not found. Try a more specific address or use the autocomplete suggestions.')
       }
-    } catch (e) {
+    } catch {
       alert('Could not look up that address. Please try again later.')
     } finally { setLocating(false) }
   }
@@ -91,7 +91,7 @@ export default function HomePage() {
       // Fetch buildings from OpenStreetMap
       console.log('Fetching buildings from OpenStreetMap...')
       const overpass = await fetch(`/api/buildings?bbox=${south},${west},${north},${east}`)
-      let osm: any = null
+      let osm: { elements: any[] } | null = null
       try {
         osm = await overpass.json()
       } catch {}
@@ -102,7 +102,7 @@ export default function HomePage() {
       
       // Convert OSM to GeoJSON and filter buildings
       const gj = osmtogeojson(osm)
-      const buildings: any[] = []
+      const buildings: turf.helpers.Feature<turf.helpers.Polygon | turf.helpers.MultiPolygon>[] = []
       for (const f of gj.features) {
         if (f.properties && f.properties.building) {
           if (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon') {
@@ -113,12 +113,12 @@ export default function HomePage() {
       console.log(`Found ${buildings.length} buildings to exclude`)
       
       // Start with the lawn polygon
-      let result: any = polygon
+      let result: turf.helpers.Feature<turf.helpers.Polygon> | null = polygon
       
       // Subtract user-drawn exclusions first (house, patios, etc.)
       if (exclusion) {
         try {
-          const diff = turf.difference(result as any, exclusion as any)
+          const diff = turf.difference(result, exclusion)
           if (diff) { result = diff }
           console.log('Subtracted user-drawn exclusions')
         } catch {}
@@ -127,7 +127,7 @@ export default function HomePage() {
       // Subtract all buildings from OpenStreetMap
       for (const b of buildings) {
         try {
-          const diff = turf.difference(result as any, b as any)
+          const diff = turf.difference(result, b)
           if (diff) { result = diff }
         } catch {}
       }
@@ -172,7 +172,7 @@ export default function HomePage() {
             onChange={(e) => setAddress(e.target.value)} 
             style={{ flex: 1, padding: 10, border: '1px solid #ccc', borderRadius: 6 }} 
           />
-          <button type="button" onClick={(e) => {
+          <button type="button" onClick={() => {
             geocode(address)
           }} disabled={locating} style={{ padding: '10px 12px', borderRadius: 6, border: '1px solid #ccc' }}>{locating ? 'Locating…' : 'Locate'}</button>
         </div>
