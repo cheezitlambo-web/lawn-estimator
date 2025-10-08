@@ -24,11 +24,11 @@ export default function HomePage() {
   // Initialize Google Places autocomplete
   useEffect(() => {
     const initAutocomplete = () => {
-      if (typeof window !== 'undefined' && window.google && window.google.maps && window.google.maps.places) {
+      if (typeof window !== 'undefined' && (window as any).google && (window as any).google.maps && (window as any).google.maps.places) {
         const input = document.getElementById('address-input') as HTMLInputElement
         if (input && !autocomplete) {
           console.log('Initializing Google Places autocomplete')
-          const autocompleteInstance = new window.google.maps.places.Autocomplete(input, {
+          const autocompleteInstance = new (window as any).google.maps.places.Autocomplete(input, {
             types: ['address'],
             componentRestrictions: { country: 'us' }
           })
