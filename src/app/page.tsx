@@ -18,6 +18,8 @@ export default function HomePage() {
   const [address, setAddress] = useState('')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [autocomplete, setAutocomplete] = useState<any>(null)
+  const [currentStep, setCurrentStep] = useState(1) // 1: Address, 2: Property, 3: Exclusions, 4: Results
+  const [propertyArea, setPropertyArea] = useState<number | null>(null)
 
   // Removed unused onPolygonChange callback
 
@@ -40,6 +42,7 @@ export default function HomePage() {
               const lng = place.geometry.location.lng()
               setCenter([lat, lng])
               setAddress(place.formatted_address || '')
+              setCurrentStep(2) // Move to property drawing step
             }
           })
           setAutocomplete(autocompleteInstance)
@@ -69,12 +72,30 @@ export default function HomePage() {
         const lon = parseFloat(data[0].lon)
         console.log('Setting center to:', lat, lon)
         setCenter([lat, lon])
+        setCurrentStep(2) // Move to property drawing step
       } else {
         alert('Address not found. Try a more specific address or use the autocomplete suggestions.')
       }
     } catch {
       alert('Could not look up that address. Please try again later.')
     } finally { setLocating(false) }
+  }
+
+  const handlePropertyComplete = () => {
+    if (polygon) {
+      // Calculate property area
+      const areaSqMeters = turf.area(polygon)
+      const correctionFactor = 10000 / 7671.976579524735
+      const correctedAreaSqMeters = areaSqMeters * correctionFactor
+      const sqft = correctedAreaSqMeters * 10.7639
+      setPropertyArea(Math.round(sqft))
+      setCurrentStep(3) // Move to exclusions step
+    }
+  }
+
+  const handleExclusionsComplete = () => {
+    setCurrentStep(4) // Move to results step
+    estimate() // Calculate final area
   }
 
   const estimate = useCallback(async () => {
@@ -184,22 +205,72 @@ export default function HomePage() {
   return (
     <main style={{ maxWidth: 960, margin: '0 auto', padding: 16 }}>
       <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Lawn Estimator</h1>
-      <p style={{ marginBottom: 12 }}>Enter an address, draw your lawn, and get a rough square footage. Buildings will be excluded automatically.</p>
-      <ol style={{ margin: '0 0 16px 18px', color: '#444' }}>
-        <li>Type your address (autocomplete suggestions will appear) and click Locate.</li>
-        <li>Draw your lawn using the green polygon tool (top-right).</li>
-        <li>Optionally draw the house/exclusions using the red polygon tool.</li>
-        <li>Click the first point to finish each shape. You can edit or delete them.</li>
-        <li>Click Estimate Area to calculate square footage and time estimate (exclusions are subtracted).</li>
-      </ol>
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16, color: '#333' }}>
-        <div style={{ width: 14, height: 14, background: '#2a7', border: '1px solid #1e5', borderRadius: 2 }}></div>
-        <span style={{ fontSize: 14 }}>Green = Lawn area</span>
-        <div style={{ width: 14, height: 14, background: '#d33', border: '1px solid #b11', borderRadius: 2, marginLeft: 16 }}></div>
-        <span style={{ fontSize: 14 }}>Red = Exclusion (house, patios, etc.)</span>
+      
+      {/* Step Indicator */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24, justifyContent: 'center' }}>
+        {[1, 2, 3, 4].map((step) => (
+          <div
+            key={step}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              background: currentStep >= step ? '#007bff' : '#e0e0e0',
+              color: currentStep >= step ? 'white' : '#666',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 600,
+              fontSize: 14
+            }}
+          >
+            {step}
+          </div>
+        ))}
       </div>
-      <form onSubmit={(e) => e.preventDefault()} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-        <div style={{ display: 'flex', gap: 8 }}>
+
+      {/* Step 1: Address Input */}
+      {currentStep === 1 && (
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <h2 style={{ fontSize: 24, marginBottom: 16 }}>Step 1: Enter Property Address</h2>
+          <p style={{ marginBottom: 16, color: '#666' }}>Type your address and we'll locate it on the map</p>
+        </div>
+      )}
+
+      {/* Step 2: Draw Property */}
+      {currentStep === 2 && (
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <h2 style={{ fontSize: 24, marginBottom: 16 }}>Step 2: Draw Property Perimeter</h2>
+          <p style={{ marginBottom: 16, color: '#666' }}>Draw a polygon around your entire property boundary</p>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 16, color: '#333' }}>
+            <div style={{ width: 14, height: 14, background: '#2a7', border: '1px solid #1e5', borderRadius: 2 }}></div>
+            <span style={{ fontSize: 14 }}>Green = Property boundary</span>
+          </div>
+        </div>
+      )}
+
+      {/* Step 3: Draw Exclusions */}
+      {currentStep === 3 && (
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <h2 style={{ fontSize: 24, marginBottom: 16 }}>Step 3: Draw Non-Mowable Areas</h2>
+          <p style={{ marginBottom: 16, color: '#666' }}>Draw polygons around areas you don't mow (house, patios, driveways, etc.)</p>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 16, color: '#333' }}>
+            <div style={{ width: 14, height: 14, background: '#d33', border: '1px solid #b11', borderRadius: 2 }}></div>
+            <span style={{ fontSize: 14 }}>Red = Non-mowable areas</span>
+          </div>
+        </div>
+      )}
+
+      {/* Step 4: Results */}
+      {currentStep === 4 && (
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <h2 style={{ fontSize: 24, marginBottom: 16 }}>Step 4: Your Lawn Estimate</h2>
+          <p style={{ marginBottom: 16, color: '#666' }}>Here's your calculated lawn area</p>
+        </div>
+      )}
+      {/* Step 1: Address Input Form */}
+      {currentStep === 1 && (
+        <form onSubmit={(e) => e.preventDefault()} style={{ display: 'flex', gap: 8, marginBottom: 16, maxWidth: 600, margin: '0 auto 16px auto' }}>
           <input 
             id="address-input"
             name="address" 
@@ -207,53 +278,124 @@ export default function HomePage() {
             required 
             value={address} 
             onChange={(e) => setAddress(e.target.value)} 
-            style={{ flex: 1, padding: 10, border: '1px solid #ccc', borderRadius: 6 }} 
+            style={{ flex: 1, padding: 12, border: '1px solid #ccc', borderRadius: 6, fontSize: 16 }} 
           />
-          <button type="button" onClick={() => {
-            geocode(address)
-          }} disabled={locating} style={{ padding: '10px 12px', borderRadius: 6, border: '1px solid #ccc' }}>{locating ? 'Locating…' : 'Locate'}</button>
+          <button type="button" onClick={() => geocode(address)} disabled={locating} style={{ 
+            padding: '12px 24px', 
+            borderRadius: 6, 
+            border: '1px solid #007bff',
+            background: '#007bff',
+            color: 'white',
+            cursor: locating ? 'not-allowed' : 'pointer',
+            fontSize: 16,
+            fontWeight: 600
+          }}>
+            {locating ? 'Locating…' : 'Locate'}
+          </button>
+        </form>
+      )}
+
+      {/* Step 2: Property Drawing */}
+      {currentStep === 2 && (
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <button 
+            onClick={handlePropertyComplete}
+            disabled={!polygon}
+            style={{ 
+              padding: '12px 24px', 
+              borderRadius: 6, 
+              border: '1px solid #007bff',
+              background: polygon ? '#007bff' : '#f0f0f0',
+              color: polygon ? 'white' : '#666',
+              cursor: polygon ? 'pointer' : 'not-allowed',
+              fontSize: 16,
+              fontWeight: 600
+            }}
+          >
+            Next: Draw Exclusions
+          </button>
         </div>
-        <div style={{ gridColumn: '1 / -1' }}></div>
-        <button type="button" onClick={estimate} disabled={!polygon || loading} style={{ 
-          padding: '10px 12px', 
-          borderRadius: 6, 
-          border: '1px solid #ccc',
-          background: loading ? '#f0f0f0' : 'white',
-          color: loading ? '#666' : 'black',
-          cursor: loading ? 'not-allowed' : 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8
-        }}>
-          {loading && (
-            <div style={{
-              width: 16,
-              height: 16,
-              border: '2px solid #ccc',
-              borderTop: '2px solid #007bff',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }}></div>
-          )}
-          {loading ? 'Estimating…' : 'Estimate Area'}
-        </button>
-        <div style={{ alignSelf: 'center' }}>
-          {squareFeet ? (
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>
-                {squareFeet.toLocaleString()} sq ft
-              </div>
-              <div style={{ fontSize: 14, color: '#666' }}>
-                Est. time: {Math.ceil(squareFeet / 250)} minutes
-              </div>
+      )}
+
+      {/* Step 3: Exclusions Drawing */}
+      {currentStep === 3 && (
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <button 
+            onClick={handleExclusionsComplete}
+            style={{ 
+              padding: '12px 24px', 
+              borderRadius: 6, 
+              border: '1px solid #007bff',
+              background: '#007bff',
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: 16,
+              fontWeight: 600
+            }}
+          >
+            Calculate Lawn Area
+          </button>
+        </div>
+      )}
+
+      {/* Step 4: Results */}
+      {currentStep === 4 && squareFeet && (
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <div style={{ 
+            background: '#f8f9fa', 
+            border: '1px solid #dee2e6', 
+            borderRadius: 8, 
+            padding: 24, 
+            marginBottom: 16,
+            maxWidth: 400,
+            margin: '0 auto 16px auto'
+          }}>
+            <div style={{ fontSize: 32, fontWeight: 700, marginBottom: 8, color: '#007bff' }}>
+              {squareFeet.toLocaleString()} sq ft
             </div>
-          ) : ''}
+            <div style={{ fontSize: 18, color: '#666', marginBottom: 16 }}>
+              Lawn Area
+            </div>
+            <div style={{ fontSize: 16, color: '#333' }}>
+              Estimated mowing time: ~{Math.round(squareFeet / 250)} minutes
+            </div>
+            {propertyArea && (
+              <div style={{ fontSize: 14, color: '#666', marginTop: 8 }}>
+                Total property: {propertyArea.toLocaleString()} sq ft
+              </div>
+            )}
+          </div>
+          <button 
+            onClick={() => {
+              setCurrentStep(1)
+              setPolygon(null)
+              setExclusion(null)
+              setSquareFeet(null)
+              setPropertyArea(null)
+              setAddress('')
+            }}
+            style={{ 
+              padding: '10px 20px', 
+              borderRadius: 6, 
+              border: '1px solid #ccc',
+              background: 'white',
+              color: '#333',
+              cursor: 'pointer',
+              fontSize: 14
+            }}
+          >
+            Start Over
+          </button>
         </div>
-        <div style={{ gridColumn: '1 / -1' }}></div>
-      </form>
+      )}
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
         <div style={{ flex: 1 }}>
-          <LawnMap center={center} onPolygonChange={setPolygon} onExclusionChange={setExclusion} />
+          <LawnMap 
+            center={center} 
+            onPolygonChange={setPolygon} 
+            onExclusionChange={setExclusion}
+            currentStep={currentStep}
+          />
         </div>
         <div style={{ minWidth: 200, padding: 12, background: '#f8f9fa', borderRadius: 8, border: '1px solid #dee2e6' }}>
           <h3 style={{ margin: '0 0 12px 0', fontSize: 16, fontWeight: 600 }}>Drawing Tools</h3>

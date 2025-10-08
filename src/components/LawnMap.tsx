@@ -15,12 +15,22 @@ export type LawnMapProps = {
   center: [number, number]
   onPolygonChange: (polygon: GeoJSON.Feature<GeoJSON.Polygon> | null) => void
   onExclusionChange?: (polygon: GeoJSON.Feature<GeoJSON.Polygon> | null) => void
+  currentStep?: number
 }
 
-export default function LawnMap({ center, onPolygonChange, onExclusionChange }: LawnMapProps) {
+export default function LawnMap({ center, onPolygonChange, onExclusionChange, currentStep = 1 }: LawnMapProps) {
   const [polygon, setPolygon] = useState<GeoJSON.Feature<GeoJSON.Polygon> | null>(null)
   const [exclusion, setExclusion] = useState<GeoJSON.Feature<GeoJSON.Polygon> | null>(null)
   const [drawingMode, setDrawingMode] = useState<'lawn' | 'exclusion'>('lawn')
+
+  // Update drawing mode based on current step
+  useEffect(() => {
+    if (currentStep === 2) {
+      setDrawingMode('lawn')
+    } else if (currentStep === 3) {
+      setDrawingMode('exclusion')
+    }
+  }, [currentStep])
   const featureGroupRef = useRef<L.FeatureGroup>(null)
   const exclusionGroupRef = useRef<L.FeatureGroup>(null)
   const mapRef = useRef<L.Map>(null)
@@ -85,7 +95,6 @@ export default function LawnMap({ center, onPolygonChange, onExclusionChange }: 
               console.log('Green lawn polygon created:', poly)
               console.log('Lawn coordinates:', latlngs.slice(0, 3))
               setPolygon(poly)
-              setDrawingMode('exclusion')
             } else {
               console.log('Red exclusion polygon created:', poly)
               console.log('Exclusion coordinates:', latlngs.slice(0, 3))
