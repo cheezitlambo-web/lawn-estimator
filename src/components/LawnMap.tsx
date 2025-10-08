@@ -20,6 +20,7 @@ export type LawnMapProps = {
 export default function LawnMap({ center, onPolygonChange, onExclusionChange }: LawnMapProps) {
   const [polygon, setPolygon] = useState<GeoJSON.Feature<GeoJSON.Polygon> | null>(null)
   const [exclusion, setExclusion] = useState<GeoJSON.Feature<GeoJSON.Polygon> | null>(null)
+  const [drawingMode, setDrawingMode] = useState<'lawn' | 'exclusion'>('lawn')
   const featureGroupRef = useRef<L.FeatureGroup>(null)
   const exclusionGroupRef = useRef<L.FeatureGroup>(null)
   const mapRef = useRef<L.Map>(null)
@@ -55,7 +56,7 @@ export default function LawnMap({ center, onPolygonChange, onExclusionChange }: 
         maxNativeZoom={19}
         maxZoom={22}
       />
-      <FeatureGroup ref={featureGroupRef} pathOptions={{ color: '#2a7' }}>
+      <FeatureGroup ref={featureGroupRef} pathOptions={{ color: drawingMode === 'lawn' ? '#2a7' : '#d33' }}>
         <EditControl
           position="topleft"
           draw={{
@@ -64,7 +65,14 @@ export default function LawnMap({ center, onPolygonChange, onExclusionChange }: 
             circlemarker: false,
             marker: false,
             polyline: false,
-            polygon: { allowIntersection: false, showArea: true, shapeOptions: { color: '#2a7', fillColor: '#bfe8cf' } }
+            polygon: { 
+              allowIntersection: false, 
+              showArea: true, 
+              shapeOptions: { 
+                color: drawingMode === 'lawn' ? '#2a7' : '#d33', 
+                fillColor: drawingMode === 'lawn' ? '#bfe8cf' : '#f99' 
+              } 
+            }
           }}
           edit={{ remove: true }}
           onCreated={(e: L.DrawEvents.Created) => {
@@ -72,58 +80,48 @@ export default function LawnMap({ center, onPolygonChange, onExclusionChange }: 
             const latlngs = layer.getLatLngs()[0].map((ll: L.LatLng) => [ll.lng, ll.lat])
             const closed = latlngs[0][0] === latlngs[latlngs.length-1][0] && latlngs[0][1] === latlngs[latlngs.length-1][1] ? latlngs : [...latlngs, latlngs[0]]
             const poly = turf.polygon([closed])
-            console.log('Green lawn polygon created:', poly)
-            console.log('Lawn coordinates:', latlngs.slice(0, 3))
-            setPolygon(poly)
+            
+            if (drawingMode === 'lawn') {
+              console.log('Green lawn polygon created:', poly)
+              console.log('Lawn coordinates:', latlngs.slice(0, 3))
+              setPolygon(poly)
+              setDrawingMode('exclusion')
+            } else {
+              console.log('Red exclusion polygon created:', poly)
+              console.log('Exclusion coordinates:', latlngs.slice(0, 3))
+              setExclusion(poly)
+            }
           }}
           onEdited={() => {
             const layers = featureGroupRef.current?.getLayers?.() || []
-            if (layers.length === 0) { setPolygon(null); return }
+            if (layers.length === 0) { 
+              if (drawingMode === 'lawn') {
+                setPolygon(null)
+              } else {
+                setExclusion(null)
+              }
+              return 
+            }
             const layer = layers[0]
             const latlngs = layer.getLatLngs()[0].map((ll: L.LatLng) => [ll.lng, ll.lat])
             const closed = latlngs[0][0] === latlngs[latlngs.length-1][0] && latlngs[0][1] === latlngs[latlngs.length-1][1] ? latlngs : [...latlngs, latlngs[0]]
             const poly = turf.polygon([closed])
-            setPolygon(poly)
+            
+            if (drawingMode === 'lawn') {
+              setPolygon(poly)
+            } else {
+              setExclusion(poly)
+            }
           }}
-          onDeleted={() => setPolygon(null)}
+          onDeleted={() => {
+            if (drawingMode === 'lawn') {
+              setPolygon(null)
+            } else {
+              setExclusion(null)
+            }
+          }}
         />
       </FeatureGroup>
-      {/* Exclusion group (e.g., house) in red - only show if lawn polygon exists */}
-      {polygon && (
-        <FeatureGroup ref={exclusionGroupRef} pathOptions={{ color: '#d33' }}>
-          <EditControl
-            position="bottomright"
-            draw={{
-              rectangle: false,
-              circle: false,
-              circlemarker: false,
-              marker: false,
-              polyline: false,
-              polygon: { allowIntersection: false, showArea: true, shapeOptions: { color: '#d33', fillColor: '#f99' } }
-            }}
-            edit={{ remove: true }}
-            onCreated={(e: L.DrawEvents.Created) => {
-              const layer = e.layer
-              const latlngs = layer.getLatLngs()[0].map((ll: L.LatLng) => [ll.lng, ll.lat])
-              const closed = latlngs[0][0] === latlngs[latlngs.length-1][0] && latlngs[0][1] === latlngs[latlngs.length-1][1] ? latlngs : [...latlngs, latlngs[0]]
-              const poly = turf.polygon([closed])
-              console.log('Red exclusion polygon created:', poly)
-              console.log('Exclusion coordinates:', latlngs.slice(0, 3))
-              setExclusion(poly)
-            }}
-            onEdited={() => {
-              const layers = exclusionGroupRef.current?.getLayers?.() || []
-              if (layers.length === 0) { setExclusion(null); return }
-              const layer = layers[0]
-              const latlngs = layer.getLatLngs()[0].map((ll: L.LatLng) => [ll.lng, ll.lat])
-              const closed = latlngs[0][0] === latlngs[latlngs.length-1][0] && latlngs[0][1] === latlngs[latlngs.length-1][1] ? latlngs : [...latlngs, latlngs[0]]
-              const poly = turf.polygon([closed])
-              setExclusion(poly)
-            }}
-            onDeleted={() => setExclusion(null)}
-          />
-        </FeatureGroup>
-      )}
     </MapContainer>
   )
 }
