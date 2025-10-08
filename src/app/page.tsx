@@ -134,6 +134,20 @@ export default function HomePage() {
       // Calculate final area
       const areaSqMeters = turf.area(result || polygon)
       const sqft = areaSqMeters * 10.7639
+      
+      // Alternative calculation for validation
+      const bbox = turf.bbox(result || polygon)
+      const bboxArea = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1]) * 111000 * 111000 // rough conversion to sq meters
+      
+      // Debug logging
+      console.log('Area calculation debug:')
+      console.log('- Area in sq meters (turf):', areaSqMeters)
+      console.log('- Bbox area (rough):', bboxArea)
+      console.log('- Conversion factor:', 10.7639)
+      console.log('- Area in sq ft:', sqft)
+      console.log('- Bbox:', bbox)
+      console.log('- Polygon coordinates sample:', JSON.stringify((result || polygon)?.geometry?.coordinates?.[0]?.slice(0, 3)))
+      
       setSquareFeet(Math.round(sqft))
       console.log(`Final lawn area: ${Math.round(sqft).toLocaleString()} sq ft`)
     } finally {
