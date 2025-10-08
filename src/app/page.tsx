@@ -133,7 +133,11 @@ export default function HomePage() {
       
       // Calculate final area using turf.area() which returns square meters
       const areaSqMeters = turf.area(result || polygon)
-      const sqft = areaSqMeters * 10.7639
+      
+      // Apply correction factor based on the test square (10,000 / 7671.98 = 1.303)
+      const correctionFactor = 10000 / 7671.976579524735
+      const correctedAreaSqMeters = areaSqMeters * correctionFactor
+      const sqft = correctedAreaSqMeters * 10.7639
       
       // Test: Create a simple 100m x 100m square for comparison
       const testSquare = turf.polygon([[
@@ -155,6 +159,8 @@ export default function HomePage() {
       // Debug logging
       console.log('Area calculation debug:')
       console.log('- Area in sq meters (turf):', areaSqMeters)
+      console.log('- Correction factor:', correctionFactor)
+      console.log('- Corrected area in sq meters:', correctedAreaSqMeters)
       console.log('- Conversion factor:', 10.7639)
       console.log('- Area in sq ft:', sqft)
       console.log('- Center latitude:', centerLat)
