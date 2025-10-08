@@ -72,6 +72,8 @@ export default function LawnMap({ center, onPolygonChange, onExclusionChange }: 
             const latlngs = layer.getLatLngs()[0].map((ll: L.LatLng) => [ll.lng, ll.lat])
             const closed = latlngs[0][0] === latlngs[latlngs.length-1][0] && latlngs[0][1] === latlngs[latlngs.length-1][1] ? latlngs : [...latlngs, latlngs[0]]
             const poly = turf.polygon([closed])
+            console.log('Green lawn polygon created:', poly)
+            console.log('Lawn coordinates:', latlngs.slice(0, 3))
             setPolygon(poly)
           }}
           onEdited={() => {
@@ -105,6 +107,8 @@ export default function LawnMap({ center, onPolygonChange, onExclusionChange }: 
               const latlngs = layer.getLatLngs()[0].map((ll: L.LatLng) => [ll.lng, ll.lat])
               const closed = latlngs[0][0] === latlngs[latlngs.length-1][0] && latlngs[0][1] === latlngs[latlngs.length-1][1] ? latlngs : [...latlngs, latlngs[0]]
               const poly = turf.polygon([closed])
+              console.log('Red exclusion polygon created:', poly)
+              console.log('Exclusion coordinates:', latlngs.slice(0, 3))
               setExclusion(poly)
             }}
             onEdited={() => {
